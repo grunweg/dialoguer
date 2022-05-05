@@ -856,9 +856,8 @@ impl<'a> TermThemeRenderer<'a> {
         let mut new_height = self.height;
         // Check each item size, increment on finding an overflow
         for size in size_vec {
-            if *size > self.term.size().1 as usize {
-                new_height += 1;
-            }
+            let term_width = self.term.size().1 as usize;
+            new_height += *size / term_width;
         }
 
         self.term.clear_last_lines(new_height)?;
