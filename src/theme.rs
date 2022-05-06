@@ -632,6 +632,13 @@ pub(crate) struct TermThemeRenderer<'a> {
     /// Height (number of output lines, ignoring overflowing items)
     /// of the last completed prompt and everything above it.
     prompt_height: usize,
+    /// Lengths of all output lines before the last prompt.
+    /// Used to handle overflowing items when clearing.
+    line_lengths_before_prompt: Vec<usize>,
+    /// Lengths of all completed output lines after the last prompt.
+    line_lengths_after_prompt: Vec<usize>,
+    /// Length of the current line: `None` if we just finished a prompt.
+    current_line_length: Option<usize>,
 }
 
 impl<'a> TermThemeRenderer<'a> {
@@ -641,6 +648,9 @@ impl<'a> TermThemeRenderer<'a> {
             theme,
             height: 0,
             prompt_height: 0,
+            line_lengths_before_prompt: Vec::new(),
+            line_lengths_after_prompt: Vec::new(),
+            current_line_length: Some(0),
         }
     }
 
@@ -652,6 +662,7 @@ impl<'a> TermThemeRenderer<'a> {
     /// Enlarge the theme by one line: allow displaying one more line of input.
     pub fn add_line(&mut self) {
         self.height += 1;
+        self.line_lengths_after_prompt.push(0);
     }
 
     /// Write a formatted string to this terminal. The string can be span multiple lines.
@@ -665,7 +676,19 @@ impl<'a> TermThemeRenderer<'a> {
     ) -> io::Result<()> {
         let mut buf = String::new();
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
-        self.height += buf.chars().filter(|&x| x == '\n').count();
+
+        let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
+        assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
+        self.height += line_lengths.len() - 1;
+
+        // The first line of buf is printed on the current line.
+        // The last line of buf becomes the new current line.
+        line_lengths[0] += self.current_line_length.unwrap_or(0);
+        self.current_line_length = Some(line_lengths.pop().unwrap());
+        self.line_lengths_after_prompt.extend(line_lengths);
+
+        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
+        assert_eq!(self.height, self.line_lengths_after_prompt.len(), "write_formatted_str: height doesn't match lengths after prompt");
         self.term.write_str(&buf)
     }
 
@@ -678,7 +701,19 @@ impl<'a> TermThemeRenderer<'a> {
     ) -> io::Result<()> {
         let mut buf = String::new();
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
-        self.height += buf.chars().filter(|&x| x == '\n').count() + 1;
+
+        let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
+        assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
+        self.height += line_lengths.len();
+
+        // The first line of buf is printed on the current line.
+        // We have an empty new line after the last line of buf.
+        line_lengths[0] += self.current_line_length.unwrap_or(0);
+        self.line_lengths_after_prompt.extend(line_lengths);
+        self.current_line_length = Some(0);
+
+        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
+        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         self.term.write_line(&buf)
     }
 
@@ -694,6 +729,10 @@ impl<'a> TermThemeRenderer<'a> {
         self.write_formatted_line(f)?;
         self.prompt_height = self.height;
         self.height = 0;
+        self.line_lengths_before_prompt.extend(self.line_lengths_after_prompt.iter());
+        self.line_lengths_after_prompt.clear();
+        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
+        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 
@@ -857,6 +896,11 @@ impl<'a> TermThemeRenderer<'a> {
         // the current line. That doesn't really matter, as these are empty.
         self.height = 0;
         self.prompt_height = 0;
+        self.line_lengths_before_prompt.clear();
+        self.line_lengths_after_prompt.clear();
+        self.current_line_length = Some(0);
+        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
+        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 
@@ -876,6 +920,10 @@ impl<'a> TermThemeRenderer<'a> {
 
         self.term.clear_last_lines(new_height)?;
         self.height = 0;
+        self.line_lengths_after_prompt.clear();
+        self.current_line_length = Some(0);
+        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
+        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 }
