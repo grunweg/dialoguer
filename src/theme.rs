@@ -888,10 +888,16 @@ impl<'a> TermThemeRenderer<'a> {
     ///
     /// Position the cursor at the beginning of the current line.
     pub fn clear(&mut self) -> io::Result<()> {
+        // Account for lines overflowing the current terminal width.
+        let mut overflowed_height = 0;
+        for size in self.line_lengths_before_prompt.iter().chain(self.line_lengths_after_prompt.iter()) {
+            let term_width = self.term.size().1 as usize;
+            overflowed_height += *size / term_width;
+        }
         // clear the current line first, so the cursor ends at the beginning of the current line.
         self.term.clear_line()?;
         self.term
-            .clear_last_lines(self.height + self.prompt_height)?;
+            .clear_last_lines(self.height + self.prompt_height + overflowed_height)?;
         // self.term now contains self.height + self.prompt_height empty lines after
         // the current line. That doesn't really matter, as these are empty.
         self.height = 0;
