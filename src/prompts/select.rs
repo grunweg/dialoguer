@@ -252,18 +252,6 @@ impl Select<'_> {
         let mut render = TermThemeRenderer::new(term, self.theme);
         let mut sel = self.default;
 
-        let mut size_vec = Vec::new();
-
-        for items in self
-            .items
-            .iter()
-            .flat_map(|i| i.split('\n'))
-            .collect::<Vec<_>>()
-        {
-            let size = &items.len();
-            size_vec.push(*size);
-        }
-
         term.hide_cursor()?;
 
         loop {
@@ -348,7 +336,7 @@ impl Select<'_> {
             if paging.active {
                 render.clear()?;
             } else {
-                render.clear_preserve_prompt(&size_vec)?;
+                render.clear_preserve_prompt()?;
             }
         }
     }

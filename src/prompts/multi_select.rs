@@ -207,19 +207,6 @@ impl MultiSelect<'_> {
         let mut paging = Paging::new(term, self.items.len(), self.max_length);
         let mut render = TermThemeRenderer::new(term, self.theme);
         let mut sel = 0;
-
-        let mut size_vec = Vec::new();
-
-        for items in self
-            .items
-            .iter()
-            .flat_map(|i| i.split('\n'))
-            .collect::<Vec<_>>()
-        {
-            let size = &items.len();
-            size_vec.push(*size);
-        }
-
         let mut checked: Vec<bool> = self.defaults.clone();
 
         term.hide_cursor()?;
@@ -327,7 +314,7 @@ impl MultiSelect<'_> {
             if paging.active {
                 render.clear()?;
             } else {
-                render.clear_preserve_prompt(&size_vec)?;
+                render.clear_preserve_prompt()?;
             }
         }
     }
