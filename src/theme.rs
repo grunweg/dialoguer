@@ -626,18 +626,14 @@ impl Theme for ColorfulTheme {
 pub(crate) struct TermThemeRenderer<'a> {
     term: &'a Term,
     theme: &'a dyn Theme,
-    /// Height (number of lines, ignoring lines overflowing the terminal)
-    /// of output after the last prompt: not counting the current line.
-    height: usize,
-    /// Height (number of output lines, ignoring overflowing items)
-    /// of the last completed prompt and everything above it.
-    prompt_height: usize,
-    /// Lengths of all output lines before the last prompt.
-    /// Used to handle overflowing items when clearing.
+    /// Lengths of all output lines of the last completed prompt and everything above it.
+    // We track this to handle overflowing lines when clearing the terminal.
     line_lengths_before_prompt: Vec<usize>,
-    /// Lengths of all completed output lines after the last prompt.
+    /// Lengths of all completed output lines after the last prompt:
+    /// this does not include the current line.
+    // We track this to handle overflowing lines when clearing the terminal.
     line_lengths_after_prompt: Vec<usize>,
-    /// Length of the current line: `None` if we just finished a prompt.
+    /// Length of the current line: `None` if we just completed a prompt.
     current_line_length: Option<usize>,
 }
 
@@ -646,8 +642,6 @@ impl<'a> TermThemeRenderer<'a> {
         TermThemeRenderer {
             term,
             theme,
-            height: 0,
-            prompt_height: 0,
             line_lengths_before_prompt: Vec::new(),
             line_lengths_after_prompt: Vec::new(),
             current_line_length: Some(0),
@@ -661,7 +655,6 @@ impl<'a> TermThemeRenderer<'a> {
 
     /// Enlarge the theme by one line: allow displaying one more line of input.
     pub fn add_line(&mut self) {
-        self.height += 1;
         self.line_lengths_after_prompt.push(0);
     }
 
@@ -679,7 +672,6 @@ impl<'a> TermThemeRenderer<'a> {
 
         let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
         assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
-        self.height += line_lengths.len() - 1;
 
         // The first line of buf is printed on the current line.
         // The last line of buf becomes the new current line.
@@ -687,8 +679,6 @@ impl<'a> TermThemeRenderer<'a> {
         self.current_line_length = Some(line_lengths.pop().unwrap());
         self.line_lengths_after_prompt.extend(line_lengths);
 
-        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
-        assert_eq!(self.height, self.line_lengths_after_prompt.len(), "write_formatted_str: height doesn't match lengths after prompt");
         self.term.write_str(&buf)
     }
 
@@ -704,7 +694,6 @@ impl<'a> TermThemeRenderer<'a> {
 
         let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
         assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
-        self.height += line_lengths.len();
 
         // The first line of buf is printed on the current line.
         // We have an empty new line after the last line of buf.
@@ -712,8 +701,6 @@ impl<'a> TermThemeRenderer<'a> {
         self.line_lengths_after_prompt.extend(line_lengths);
         self.current_line_length = Some(0);
 
-        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
-        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         self.term.write_line(&buf)
     }
 
@@ -727,13 +714,9 @@ impl<'a> TermThemeRenderer<'a> {
         f: F,
     ) -> io::Result<()> {
         self.write_formatted_line(f)?;
-        self.prompt_height = self.height;
-        self.height = 0;
         self.line_lengths_before_prompt.extend(self.line_lengths_after_prompt.iter());
         self.line_lengths_after_prompt.clear();
         self.current_line_length = None;
-        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
-        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 
@@ -897,21 +880,19 @@ impl<'a> TermThemeRenderer<'a> {
         }
         // clear the current line first, so the cursor ends at the beginning of the current line.
         self.term.clear_line()?;
+        let height = self.line_lengths_before_prompt.len();
+        let prompt_height= self.line_lengths_after_prompt.len();
         self.term
-            .clear_last_lines(self.height + self.prompt_height + overflowed_height)?;
-        // self.term now contains self.height + self.prompt_height empty lines after
+            .clear_last_lines(height + prompt_height + overflowed_height)?;
+        // self.term now contains height + prompt_height empty lines after
         // the current line. That doesn't really matter, as these are empty.
-        self.height = 0;
-        self.prompt_height = 0;
         self.line_lengths_before_prompt.clear();
         self.line_lengths_after_prompt.clear();
         self.current_line_length = Some(0);
-        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
-        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 
-    /// Clear all output after the last user prompt; leave the prompt behind.
+    /// Clear all output after the last completed prompt; leave the prompt behind.
     pub fn clear_preserve_prompt(&mut self) -> io::Result<()> {
         // Account for lines overflowing the current terminal width.
         let mut extra_height = 0;
@@ -920,12 +901,9 @@ impl<'a> TermThemeRenderer<'a> {
             extra_height += size / term_width;
         }
         self.term.clear_line()?;
-        self.term.clear_last_lines(self.height + extra_height)?;
-        self.height = 0;
+        self.term.clear_last_lines(self.line_lengths_after_prompt.len() + extra_height)?;
         self.line_lengths_after_prompt.clear();
         self.current_line_length = Some(0);
-        assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
-        assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
     }
 }
