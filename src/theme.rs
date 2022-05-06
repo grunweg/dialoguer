@@ -671,8 +671,6 @@ impl<'a> TermThemeRenderer<'a> {
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
-        assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
-
         // The first line of buf is printed on the current line.
         // The last line of buf becomes the new current line.
         line_lengths[0] += self.current_line_length.unwrap_or(0);
@@ -693,8 +691,6 @@ impl<'a> TermThemeRenderer<'a> {
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         let mut line_lengths: Vec<_> = buf.lines().map(|l| l.len()).collect();
-        assert_eq!(buf.chars().filter(|&x| x == '\n').count(), line_lengths.len() - 1); // sanity check of my logic
-
         // The first line of buf is printed on the current line.
         // We have an empty new line after the last line of buf.
         line_lengths[0] += self.current_line_length.unwrap_or(0);
