@@ -731,6 +731,7 @@ impl<'a> TermThemeRenderer<'a> {
         self.height = 0;
         self.line_lengths_before_prompt.extend(self.line_lengths_after_prompt.iter());
         self.line_lengths_after_prompt.clear();
+        self.current_line_length = None;
         assert_eq!(self.prompt_height, self.line_lengths_before_prompt.len());
         assert_eq!(self.height, self.line_lengths_after_prompt.len());
         Ok(())
