@@ -918,6 +918,7 @@ impl<'a> TermThemeRenderer<'a> {
             let term_width = self.term.size().1 as usize;
             extra_height += size / term_width;
         }
+        self.term.clear_line()?;
         self.term.clear_last_lines(self.height + extra_height)?;
         self.height = 0;
         self.line_lengths_after_prompt.clear();
