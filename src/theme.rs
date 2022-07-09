@@ -650,7 +650,7 @@ impl<'a> TermThemeRenderer<'a> {
     }
 
     #[cfg(feature = "password")]
-    pub fn term(&self) -> &'a dyn io::Write {
+    pub fn term(&self) -> &dyn io::Write {
         self.term
     }
 

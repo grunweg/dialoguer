@@ -3,7 +3,7 @@ use std::{io, ops::Rem};
 use crate::paging::Paging;
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 
-use console::{Key, Term};
+use console::Key;
 
 /// Render a selection prompt.
 ///
@@ -176,7 +176,7 @@ impl Select<'_> {
     /// Unlike [`interact_opt`](Self::interact_opt), this does not allow to quit with 'Esc' or 'q'.
     #[inline]
     pub fn interact(&self) -> io::Result<usize> {
-        self.interact_on(&Term::stderr())
+        self.interact_on(&mut io::stderr())
     }
 
     /// Enable user interaction and return the result.
@@ -186,7 +186,7 @@ impl Select<'_> {
     /// Result contains `Some(index)` if user selected one of items using 'Enter' or `None` if user cancelled with 'Esc' or 'q'.
     #[inline]
     pub fn interact_opt(&self) -> io::Result<Option<usize>> {
-        self.interact_on_opt(&Term::stderr())
+        self.interact_on_opt(&mut io::stderr())
     }
 
     /// Like [interact](#method.interact) but allows a specific terminal to be set.
@@ -208,7 +208,7 @@ impl Select<'_> {
     /// }
     ///```
     #[inline]
-    pub fn interact_on(&self, term: &Term) -> io::Result<usize> {
+    pub fn interact_on(&self, term: &mut dyn io::Write) -> io::Result<usize> {
         self._interact_on(term, false)?
             .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Quit not allowed in this case"))
     }

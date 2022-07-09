@@ -9,7 +9,7 @@ use crate::{
     validate::Validator,
 };
 
-use console::{Key, Term};
+use console::Key;
 
 /// Renders an input prompt.
 ///
@@ -252,11 +252,11 @@ where
     ///
     /// The dialog is rendered on stderr.
     pub fn interact_text(&mut self) -> io::Result<T> {
-        self.interact_text_on(&Term::stderr())
+        self.interact_text_on(&mut io::stderr())
     }
 
     /// Like [`interact_text`](#method.interact_text) but allows a specific terminal to be set.
-    pub fn interact_text_on(&mut self, term: &Term) -> io::Result<T> {
+    pub fn interact_text_on(&mut self, term: &mut dyn io::Write) -> io::Result<T> {
         let mut render = TermThemeRenderer::new(term, self.theme);
 
         loop {
@@ -467,11 +467,11 @@ where
     /// If the user confirms the result is `true`, `false` otherwise.
     /// The dialog is rendered on stderr.
     pub fn interact(&mut self) -> io::Result<T> {
-        self.interact_on(&Term::stderr())
+        self.interact_on(&mut io::stderr())
     }
 
     /// Like [`interact`](#method.interact) but allows a specific terminal to be set.
-    pub fn interact_on(&mut self, term: &Term) -> io::Result<T> {
+    pub fn interact_on(&mut self, term: &mut dyn io::Write) -> io::Result<T> {
         let mut render = TermThemeRenderer::new(term, self.theme);
 
         loop {

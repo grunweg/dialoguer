@@ -2,7 +2,7 @@ use std::io;
 
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 
-use console::{Key, Term};
+use console::Key;
 
 /// Render a confirmation prompt.
 ///
@@ -109,7 +109,7 @@ impl Confirm<'_> {
     /// to quit the dialog with 'Esc' or 'q'.
     #[inline]
     pub fn interact(&self) -> io::Result<bool> {
-        self.interact_on(&Term::stderr())
+        self.interact_on(&mut io::stderr())
     }
 
     /// Enable user interaction and return the result.
@@ -121,7 +121,7 @@ impl Confirm<'_> {
     /// or `None` if the user cancelled the prompt with 'Esc' or 'q'.
     #[inline]
     pub fn interact_opt(&self) -> io::Result<Option<bool>> {
-        self.interact_on_opt(&Term::stderr())
+        self.interact_on_opt(&mut io::stderr())
     }
 
     /// Like [interact](#method.interact) but allow a specific terminal to be set.
@@ -130,17 +130,17 @@ impl Confirm<'_> {
     ///
     /// ```rust,no_run
     /// use dialoguer::Confirm;
-    /// use console::Term;
+    /// use std::io;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn main() -> io::Result<()> {
     /// let proceed = Confirm::new()
     ///     .with_prompt("Do you wish to continue?")
-    ///     .interact_on(&Term::stderr())?;
+    ///     .interact_on(&mut io::stderr())?;
     /// #   Ok(())
     /// # }
     /// ```
     #[inline]
-    pub fn interact_on(&self, term: &Term) -> io::Result<bool> {
+    pub fn interact_on(&self, term: &mut dyn io::Write) -> io::Result<bool> {
         self._interact_on(term, false)?
             .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Quit not allowed in this case"))
     }
@@ -150,11 +150,11 @@ impl Confirm<'_> {
     /// ## Examples
     /// ```rust,no_run
     /// use dialoguer::Confirm;
-    /// use console::Term;
+    /// use std::io;
     ///
-    /// fn main() -> std::io::Result<()> {
+    /// fn main() -> io::Result<()> {
     ///     let confirmation = Confirm::new()
-    ///         .interact_on_opt(&Term::stdout())?;
+    ///         .interact_on_opt(&mut io::stdout())?;
     ///
     ///     match confirmation {
     ///         Some(answer) => println!("User answered {}", if answer { "yes" } else { "no " }),
