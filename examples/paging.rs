@@ -1,4 +1,4 @@
-use dialoguer::{theme::ColorfulTheme, Select};
+fn main() {} /* FIXME enable again! use dialoguer::{theme::ColorfulTheme, Select};
 
 fn main() {
     let selections = &[
@@ -41,3 +41,4 @@ fn main() {
 
     println!("Enjoy your {}!", selections[selection]);
 }
+*/
