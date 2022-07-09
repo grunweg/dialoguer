@@ -235,12 +235,12 @@ impl Select<'_> {
     /// }
     /// ```
     #[inline]
-    pub fn interact_on_opt(&self, term: &Term) -> io::Result<Option<usize>> {
+    pub fn interact_on_opt(&self, term: &mut dyn io::Write) -> io::Result<Option<usize>> {
         self._interact_on(term, true)
     }
 
     /// Like `interact` but allows a specific terminal to be set.
-    fn _interact_on(&self, term: &Term, allow_quit: bool) -> io::Result<Option<usize>> {
+    fn _interact_on(&self, term: &mut dyn io::Write, allow_quit: bool) -> io::Result<Option<usize>> {
         if self.items.is_empty() {
             return Err(io::Error::new(
                 io::ErrorKind::Other,

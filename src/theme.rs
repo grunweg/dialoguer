@@ -1,7 +1,8 @@
 //! Customizes the rendering of the elements.
-use std::{fmt, io};
+use std::{convert::TryInto, io, fmt};
 
-use console::{style, Style, StyledObject, Term};
+use console::{style, Style, StyledObject};
+use crossterm::{ExecutableCommand, cursor::{MoveDown, MoveUp}, terminal::{self, Clear, ClearType}};
 
 /// Implements a theme for dialoguer.
 pub trait Theme {
@@ -624,7 +625,8 @@ impl Theme for ColorfulTheme {
 
 /// Helper struct to conveniently render a theme to a term.
 pub(crate) struct TermThemeRenderer<'a> {
-    term: &'a Term,
+    // We don't pass an explicit term instance; crossterm operates on anything implementing the Write trait.
+    term: &'a mut dyn std::io::Write,
     theme: &'a dyn Theme,
     height: usize,
     prompt_height: usize,
@@ -632,7 +634,7 @@ pub(crate) struct TermThemeRenderer<'a> {
 }
 
 impl<'a> TermThemeRenderer<'a> {
-    pub fn new(term: &'a Term, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
+    pub fn new(term: &'a mut dyn io::Write, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
         TermThemeRenderer {
             term,
             theme,
@@ -648,7 +650,7 @@ impl<'a> TermThemeRenderer<'a> {
     }
 
     #[cfg(feature = "password")]
-    pub fn term(&self) -> &Term {
+    pub fn term(&self) -> &'a dyn io::Write {
         self.term
     }
 
@@ -669,7 +671,8 @@ impl<'a> TermThemeRenderer<'a> {
         let mut buf = String::new();
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
         self.height += buf.chars().filter(|&x| x == '\n').count();
-        self.term.write_str(&buf)
+        self.term.write(&buf.as_bytes())?;
+        Ok(())
     }
 
     /// Like [`write_formatted_string`](#method::write_formatted_string), but add a linebreak afterwards.
@@ -681,8 +684,10 @@ impl<'a> TermThemeRenderer<'a> {
     ) -> io::Result<()> {
         let mut buf = String::new();
         f(self, &mut buf).map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
-        self.height += buf.chars().filter(|&x| x == '\n').count() + 1;
-        self.term.write_line(&buf)
+        buf.push('\n');
+        self.height += buf.chars().filter(|&x| x == '\n').count();
+        self.term.write(&buf.as_bytes())?;
+        Ok(())
     }
 
     /// Write a formatted prompt string to this terminal.
@@ -854,9 +859,9 @@ impl<'a> TermThemeRenderer<'a> {
     ///
     /// Position the cursor at the beginning of the current line.
     pub fn clear(&mut self) -> io::Result<()> {
-        self.term
-            .clear_last_lines(self.height + self.prompt_height)?;
+        self.term.execute(Clear(ClearType::All))?;
         self.height = 0;
+        self.prompt_height = 0;
         Ok(())
     }
 
@@ -867,12 +872,14 @@ impl<'a> TermThemeRenderer<'a> {
         let mut new_height = self.height;
         // Check each item size, increment on finding an overflow.
         for size in size_vec {
-            if *size > self.term.size().1 as usize {
+            if *size > terminal::size().unwrap_or((80, 24)).1 as usize {
                 new_height += 1;
             }
         }
-
-        self.term.clear_last_lines(new_height)?;
+        let new_height = new_height.try_into().unwrap();
+        self.term.execute(MoveUp(new_height))?
+            .execute(Clear(ClearType::FromCursorDown))?
+            .execute(MoveDown(new_height))?;
         self.height = 0;
         Ok(())
     }

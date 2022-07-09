@@ -165,11 +165,11 @@ impl Confirm<'_> {
     /// }
     /// ```
     #[inline]
-    pub fn interact_on_opt(&self, term: &Term) -> io::Result<Option<bool>> {
+    pub fn interact_on_opt(&self, term: &mut dyn io::Write) -> io::Result<Option<bool>> {
         self._interact_on(term, true)
     }
 
-    fn _interact_on(&self, term: &Term, allow_quit: bool) -> io::Result<Option<bool>> {
+    fn _interact_on(&self, term: &mut dyn io::Write, allow_quit: bool) -> io::Result<Option<bool>> {
         let mut render = TermThemeRenderer::new(term, self.theme);
 
         let default_if_show = if self.show_default {

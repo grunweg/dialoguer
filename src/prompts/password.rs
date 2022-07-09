@@ -90,7 +90,7 @@ impl Password<'_> {
     }
 
     /// Like [`interact`](#method::interact), but allow a specific terminal to be set.
-    pub fn interact_on(&self, term: &Term) -> io::Result<String> {
+    pub fn interact_on(&self, term: &mut dyn io::Write) -> io::Result<String> {
         let mut render = TermThemeRenderer::new(term, self.theme);
         render.set_prompts_reset_height(false);
 
@@ -125,9 +125,11 @@ impl Password<'_> {
     fn prompt_password(&self, render: &mut TermThemeRenderer, prompt: &str) -> io::Result<String> {
         loop {
             render.password_prompt(prompt)?;
-            render.term().flush()?;
+            // TODO: uncomment this, without borrow checking errors!
+            //render.term().flush();
 
-            let input = render.term().read_secure_line()?;
+            // TODO: implement this again/port from console-rs!
+            let input = "42".to_string();//render.term().read_secure_line()?;
 
             render.add_line();
 
