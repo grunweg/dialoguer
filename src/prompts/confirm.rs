@@ -3,6 +3,7 @@ use std::io;
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 
 use console::Key;
+use crossterm::{ExecutableCommand, cursor, terminal::{Clear, ClearType}};
 
 /// Render a confirmation prompt.
 ///
@@ -180,7 +181,7 @@ impl Confirm<'_> {
 
         render.confirm_prompt(&self.prompt, default_if_show)?;
 
-        term.hide_cursor()?;
+        term.execute(cursor::Hide)?;
         term.flush()?;
 
         let rv;
@@ -219,7 +220,7 @@ impl Confirm<'_> {
                     }
                 };
 
-                term.clear_line()?;
+                term.execute(Clear(ClearType::CurrentLine))?;
                 render.confirm_prompt(&self.prompt, value)?;
             }
         } else {
@@ -242,11 +243,11 @@ impl Confirm<'_> {
             }
         }
 
-        term.clear_line()?;
+        term.execute(Clear(ClearType::CurrentLine))?;
         if self.report {
             render.confirm_prompt_selection(&self.prompt, rv)?;
         }
-        term.show_cursor()?;
+        term.execute(cursor::Show)?;
         term.flush()?;
 
         Ok(rv)

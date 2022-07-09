@@ -6,6 +6,7 @@ use crate::{
 };
 
 use console::Key;
+use crossterm::{ExecutableCommand, cursor};
 
 /// Renders a multi select prompt.
 ///
@@ -222,7 +223,7 @@ impl MultiSelect<'_> {
 
         let mut checked: Vec<bool> = self.defaults.clone();
 
-        term.hide_cursor()?;
+        term.execute(cursor::Hide)?;
 
         loop {
             if let Some(ref prompt) = self.prompt {
@@ -279,7 +280,7 @@ impl MultiSelect<'_> {
                             term.clear_last_lines(paging.capacity)?;
                         }
 
-                        term.show_cursor()?;
+                        term.execute(cursor::Show)?;
                         term.flush()?;
 
                         return Ok(None);
@@ -308,7 +309,7 @@ impl MultiSelect<'_> {
                         }
                     }
 
-                    term.show_cursor()?;
+                    term.execute(cursor::Show)?;
                     term.flush()?;
 
                     return Ok(Some(

@@ -157,7 +157,7 @@ impl FuzzySelect<'_> {
         // Variable used to determine if we need to scroll through the list.
         let mut starting_row = 0;
 
-        term.hide_cursor()?;
+        term.execute(cursor::Hide)?;
 
         loop {
             render.clear()?;
@@ -190,7 +190,7 @@ impl FuzzySelect<'_> {
                         term.clear_last_lines(filtered_list.len())?;
                         term.flush()?;
                     }
-                    term.show_cursor()?;
+                    term.execute(cursor::Show)?;
                     return Ok(None);
                 }
                 Key::ArrowUp | Key::BackTab if !filtered_list.is_empty() => {
@@ -243,7 +243,7 @@ impl FuzzySelect<'_> {
                     let sel_string_pos_in_items =
                         self.items.iter().position(|item| item.eq(sel_string));
 
-                    term.show_cursor()?;
+                    term.execute(cursor::Show)?;
                     return Ok(sel_string_pos_in_items);
                 }
                 Key::Backspace if position > 0 => {

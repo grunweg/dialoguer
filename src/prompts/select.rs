@@ -4,6 +4,7 @@ use crate::paging::Paging;
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 
 use console::Key;
+use crossterm::{ExecutableCommand, cursor};
 
 /// Render a selection prompt.
 ///
@@ -264,7 +265,7 @@ impl Select<'_> {
             size_vec.push(*size);
         }
 
-        term.hide_cursor()?;
+        term.execute(cursor::Hide)?;
 
         loop {
             if let Some(ref prompt) = self.prompt {
@@ -299,7 +300,7 @@ impl Select<'_> {
                             term.clear_last_lines(paging.capacity)?;
                         }
 
-                        term.show_cursor()?;
+                        term.execute(cursor::Show)?;
                         term.flush()?;
 
                         return Ok(None);
@@ -335,7 +336,7 @@ impl Select<'_> {
                         }
                     }
 
-                    term.show_cursor()?;
+                    term.execute(cursor::Show)?;
                     term.flush()?;
 
                     return Ok(Some(sel));

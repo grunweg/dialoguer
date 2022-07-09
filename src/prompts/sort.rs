@@ -6,6 +6,7 @@ use crate::{
 };
 
 use console::Key;
+use crossterm::{ExecutableCommand, cursor};
 
 /// Renders a sort prompt.
 ///
@@ -191,7 +192,7 @@ impl Sort<'_> {
         let mut order: Vec<_> = (0..self.items.len()).collect();
         let mut checked: bool = false;
 
-        term.hide_cursor()?;
+        term.execute(cursor::Hide)?;
 
         loop {
             if let Some(ref prompt) = self.prompt {
@@ -292,7 +293,7 @@ impl Sort<'_> {
                             term.clear_last_lines(paging.capacity)?;
                         }
 
-                        term.show_cursor()?;
+                        term.execute(cursor::Show)?;
                         term.flush()?;
 
                         return Ok(None);
@@ -314,7 +315,7 @@ impl Sort<'_> {
                         }
                     }
 
-                    term.show_cursor()?;
+                    term.execute(cursor::Show)?;
                     term.flush()?;
 
                     return Ok(Some(order));
