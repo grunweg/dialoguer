@@ -647,14 +647,15 @@ impl<'a> TermThemeRenderer<'a> {
         self.prompts_reset_height = val;
     }
 
-    #[cfg(feature = "password")]
-    pub fn term(&self) -> &Term {
-        self.term
-    }
-
     /// Enlarge the theme by one line: allow displaying one more line of input.
     pub fn add_line(&mut self) {
         self.height += 1;
+    }
+
+    // Helper methods, passing commands through to the underlying terminal.
+    pub fn flush(&mut self) -> io::Result<()> {
+        self.term.flush()?;
+        Ok(())
     }
 
     /// Write a formatted string to this terminal. The string can be span multiple lines.
