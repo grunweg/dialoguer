@@ -1,4 +1,4 @@
-use crate::{DEFAULT_TERMINAL_SIZE, theme::{self, SimpleTheme, TermThemeRenderer, Theme}};
+use crate::{DEFAULT_TERMINAL_SIZE, theme::{SimpleTheme, TermThemeRenderer, Theme}};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent},
     terminal,
