@@ -1,6 +1,9 @@
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 use console::Term;
-use crossterm::{event::{Event, KeyCode, KeyEvent, read}, terminal};
+use crossterm::{
+    event::{read, Event, KeyCode, KeyEvent},
+    terminal,
+};
 use fuzzy_matcher::FuzzyMatcher;
 use std::{io, ops::Rem};
 
@@ -207,7 +210,8 @@ impl FuzzySelect<'_> {
                             sel = filtered_list.len() - 1;
                         } else {
                             sel = ((sel as i64 - 1 + filtered_list.len() as i64)
-                                % (filtered_list.len() as i64)) as usize;
+                                % (filtered_list.len() as i64))
+                                as usize;
                         }
                         term.flush()?;
                     }
@@ -238,8 +242,10 @@ impl FuzzySelect<'_> {
                         }
 
                         if self.report {
-                            render
-                                .input_prompt_selection(self.prompt.as_str(), filtered_list[sel].0)?;
+                            render.input_prompt_selection(
+                                self.prompt.as_str(),
+                                filtered_list[sel].0,
+                            )?;
                         }
 
                         let sel_string = filtered_list[sel].0;
