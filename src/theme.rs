@@ -664,6 +664,10 @@ impl<'a> TermThemeRenderer<'a> {
         self.term.execute(cursor::Hide)?;
         Ok(())
     }
+    pub fn show_cursor(&mut self) -> io::Result<()> {
+        self.term.execute(cursor::Show)?;
+        Ok(())
+    }
     /// Clear the current line of input.
     ///
     /// Position the cursor at the beginning of the current line.
@@ -897,7 +901,7 @@ impl<'a> TermThemeRenderer<'a> {
     /// Clear the last `n` lines of input, as well as the current line.
     ///
     /// Position the cursor at the beginning of the current line.
-    fn clear_last_lines(&mut self, n: u16) -> io::Result<()> {
+    pub(crate) fn clear_last_lines(&mut self, n: u16) -> io::Result<()> {
         clear_last_lines(self.term, n)
     }
 }
