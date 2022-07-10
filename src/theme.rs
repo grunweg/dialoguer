@@ -1,7 +1,7 @@
 //! Customizes the rendering of the elements.
 use std::{fmt, io};
 
-use console::{style, Style, StyledObject, Term};
+use console::{style, Style, StyledObject};
 
 /// Implements a theme for dialoguer.
 pub trait Theme {
@@ -624,7 +624,7 @@ impl Theme for ColorfulTheme {
 
 /// Helper struct to conveniently render a theme to a term.
 pub(crate) struct TermThemeRenderer<'a> {
-    term: &'a Term,
+    term: &'a mut dyn io::Write,
     theme: &'a dyn Theme,
     height: usize,
     prompt_height: usize,
@@ -632,7 +632,7 @@ pub(crate) struct TermThemeRenderer<'a> {
 }
 
 impl<'a> TermThemeRenderer<'a> {
-    pub fn new(term: &'a Term, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
+    pub fn new(term: &'a mut dyn std::io::Write, theme: &'a dyn Theme) -> TermThemeRenderer<'a> {
         TermThemeRenderer {
             term,
             theme,
