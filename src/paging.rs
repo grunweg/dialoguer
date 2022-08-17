@@ -2,7 +2,7 @@ use std::io;
 
 use crossterm::terminal;
 
-use crate::{DEFAULT_TERMINAL_SIZE, theme};
+use crate::{theme, DEFAULT_TERMINAL_SIZE};
 
 /// Creates a paging module
 ///
@@ -21,7 +21,11 @@ pub struct Paging<'a> {
 }
 
 impl<'a> Paging<'a> {
-    pub fn new(term: &'a mut dyn io::Write, items_len: usize, max_capacity: Option<usize>) -> Paging<'a> {
+    pub fn new(
+        term: &'a mut dyn io::Write,
+        items_len: usize,
+        max_capacity: Option<usize>,
+    ) -> Paging<'a> {
         let term_size = terminal::size().unwrap_or(DEFAULT_TERMINAL_SIZE);
         // Subtract -2 because we need space to render the prompt, if paging is active
         let capacity = max_capacity

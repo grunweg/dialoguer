@@ -1,4 +1,7 @@
-use crate::{DEFAULT_TERMINAL_SIZE, theme::{SimpleTheme, TermThemeRenderer, Theme}};
+use crate::{
+    theme::{SimpleTheme, TermThemeRenderer, Theme},
+    DEFAULT_TERMINAL_SIZE,
+};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent},
     terminal,
@@ -139,7 +142,11 @@ impl FuzzySelect<'_> {
     }
 
     /// Like `interact` but allows a specific terminal to be set.
-    fn _interact_on(&self, term: &mut dyn io::Write, allow_quit: bool) -> io::Result<Option<usize>> {
+    fn _interact_on(
+        &self,
+        term: &mut dyn io::Write,
+        allow_quit: bool,
+    ) -> io::Result<Option<usize>> {
         let mut position = 0;
         let mut search_term = String::new();
 
@@ -156,7 +163,8 @@ impl FuzzySelect<'_> {
         let matcher = fuzzy_matcher::skim::SkimMatcherV2::default();
 
         // Subtract -2 because we need space to render the prompt.
-        let visible_term_rows = (terminal::size().unwrap_or(DEFAULT_TERMINAL_SIZE).0 as usize).max(3) - 2;
+        let visible_term_rows =
+            (terminal::size().unwrap_or(DEFAULT_TERMINAL_SIZE).0 as usize).max(3) - 2;
         // Variable used to determine if we need to scroll through the list.
         let mut starting_row = 0;
 

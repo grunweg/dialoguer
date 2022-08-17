@@ -2,7 +2,11 @@
 use std::{fmt, io};
 
 use console::{style, Style, StyledObject};
-use crossterm::{ExecutableCommand, cursor::{self, MoveDown, MoveLeft, MoveRight, MoveToColumn, MoveUp}, terminal::{self, Clear, ClearType}};
+use crossterm::{
+    cursor::{self, MoveDown, MoveLeft, MoveRight, MoveToColumn, MoveUp},
+    terminal::{self, Clear, ClearType},
+    ExecutableCommand,
+};
 
 use crate::DEFAULT_TERMINAL_SIZE;
 
@@ -688,7 +692,9 @@ impl<'a> TermThemeRenderer<'a> {
     }
     // Clear the last `n` chars from the current line; position the cursor at the end of the line.
     pub fn clear_last_chars(&mut self, n: u16) -> io::Result<()> {
-        self.term.execute(MoveLeft(n))?.execute(Clear(ClearType::UntilNewLine))?;
+        self.term
+            .execute(MoveLeft(n))?
+            .execute(Clear(ClearType::UntilNewLine))?;
         Ok(())
     }
 

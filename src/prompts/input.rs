@@ -9,7 +9,11 @@ use crate::{
     validate::Validator,
 };
 
-use crossterm::{event::{Event, KeyCode, KeyEvent, read}, terminal, tty::IsTty};
+use crossterm::{
+    event::{read, Event, KeyCode, KeyEvent},
+    terminal,
+    tty::IsTty,
+};
 
 /// Renders an input prompt.
 ///
