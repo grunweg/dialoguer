@@ -2,10 +2,7 @@ use std::io;
 
 use crate::theme::{SimpleTheme, TermThemeRenderer, Theme};
 
-use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent},
-    terminal,
-};
+use crossterm::{ExecutableCommand, cursor, event::{read, Event, KeyCode, KeyEvent}, terminal};
 
 /// Render a confirmation prompt.
 ///
@@ -183,8 +180,8 @@ impl Confirm<'_> {
 
         render.confirm_prompt(&self.prompt, default_if_show)?;
 
-        term.hide_cursor()?;
-        term.flush()?;
+        render.hide_cursor()?;
+        render.flush()?;
 
         let rv;
         terminal::enable_raw_mode()?;
@@ -223,7 +220,7 @@ impl Confirm<'_> {
                     }
                 };
 
-                term.clear_line()?;
+                render.clear_current_line()?;
                 render.confirm_prompt(&self.prompt, value)?;
             }
         } else {
@@ -247,11 +244,11 @@ impl Confirm<'_> {
             }
         }
 
-        term.clear_line()?;
+        render.clear_current_line()?;
         if self.report {
             render.confirm_prompt_selection(&self.prompt, rv)?;
         }
-        term.show_cursor()?;
+        term.execute(cursor::Show)?;
         term.flush()?;
 
         Ok(rv)
