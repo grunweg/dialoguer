@@ -867,6 +867,9 @@ impl<'a> TermThemeRenderer<'a> {
         })
     }
 
+    /// Clear the current theme.
+    ///
+    /// Position the cursor at the beginning of the current line.
     pub fn clear(&mut self) -> io::Result<()> {
         self.clear_last_lines((self.height + self.prompt_height) as u16)?;
         self.height = 0;
@@ -874,6 +877,9 @@ impl<'a> TermThemeRenderer<'a> {
         Ok(())
     }
 
+    /// Clear all output after the last completed prompt; leave the prompt behind.
+    ///
+    /// `size_vec` contains the lengths of all lines of output after the prompt.
     pub fn clear_preserve_prompt(&mut self, size_vec: &[usize]) -> io::Result<()> {
         let mut new_height = self.height;
         // Check each item size, increment on finding an overflow
