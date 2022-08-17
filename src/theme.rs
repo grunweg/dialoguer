@@ -4,6 +4,8 @@ use std::{fmt, io};
 use console::{style, Style, StyledObject};
 use crossterm::{ExecutableCommand, cursor::{self, MoveDown, MoveToColumn, MoveUp}, terminal::{self, Clear, ClearType}};
 
+use crate::DEFAULT_TERMINAL_SIZE;
+
 /// Implements a theme for dialoguer.
 pub trait Theme {
     /// Format a prompt.
@@ -666,9 +668,7 @@ impl<'a> TermThemeRenderer<'a> {
     ///
     /// Position the cursor at the beginning of the current line.
     pub fn clear_current_line(&mut self) -> io::Result<()> {
-        self.term.execute(Clear(ClearType::CurrentLine))?;
-        self.term.execute(MoveToColumn(1))?;
-        Ok(())
+        clear_current_line(self.term)
     }
 
     /// Write a formatted string to this terminal. The string can be span multiple lines.
@@ -884,7 +884,7 @@ impl<'a> TermThemeRenderer<'a> {
         let mut new_height = self.height;
         // Check each item size, increment on finding an overflow
         for size in size_vec {
-            if *size > terminal::size().unwrap_or((80, 24)).1 as usize {
+            if *size > terminal::size().unwrap_or(DEFAULT_TERMINAL_SIZE).1 as usize {
                 new_height += 1;
             }
         }
@@ -898,14 +898,29 @@ impl<'a> TermThemeRenderer<'a> {
     ///
     /// Position the cursor at the beginning of the current line.
     fn clear_last_lines(&mut self, n: u16) -> io::Result<()> {
-        self.term.execute(MoveUp(n))?;
-        for _ in 0..n {
-            self.clear_current_line()?;
-            self.term.execute(MoveDown(1))?;
-        }
-        self.clear_current_line()?;
-        self.term.execute(MoveUp(n))?;
-        Ok(())
+        clear_last_lines(self.term, n)
     }
+}
 
+/// Clear the current line of input.
+///
+/// Position the cursor at the beginning of the current line.
+fn clear_current_line(term: &mut dyn io::Write) -> io::Result<()> {
+    term.execute(Clear(ClearType::CurrentLine))?;
+    term.execute(MoveToColumn(1))?;
+    Ok(())
+}
+
+/// Clear the last `n` lines of input, as well as the current line.
+///
+/// Position the cursor at the beginning of the current line.
+pub(crate) fn clear_last_lines(term: &mut dyn io::Write, n: u16) -> io::Result<()> {
+    term.execute(MoveUp(n))?;
+    for _ in 0..n {
+        clear_current_line(term)?;
+        term.execute(MoveDown(1))?;
+    }
+    clear_current_line(term)?;
+    term.execute(MoveUp(n))?;
+    Ok(())
 }
